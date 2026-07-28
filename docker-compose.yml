@@ -1,0 +1,17 @@
+services:
+  db:
+    image: ankane/pgvector:latest
+    container_name: semantic_search
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - semantic_search_postgres_data:/var/lib/postgresql/data
+
+
+volumes:
+  semantic_search_postgres_data:
