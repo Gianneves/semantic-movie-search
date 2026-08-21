@@ -1,16 +1,18 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Users } from './entities/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from './dto/update-user.dto';
+import type { TokenPayload } from 'src/auth/utils/token-payload.interface';
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(Users)
         private readonly usersRepository: Repository<Users>
-    ) {}
+    ) { }
 
     async create(createUser: CreateUserDto) {
         try {
@@ -30,5 +32,37 @@ export class UsersService {
 
             throw new Error(error);
         }
+    }
+
+    async update(id: string, updateUser: UpdateUserDto, tokenPayload: TokenPayload) {
+
+        const personData = {
+            name: updateUser.name
+        }
+
+
+        if (updateUser?.password) {
+            const passHash = await bcrypt.hash(updateUser.password, 10);
+
+            personData['password'] = passHash;
+        }
+
+        const person = await this.usersRepository.preload({
+            id,
+            ...personData
+        });
+
+       
+        if (!person) {
+            throw new NotFoundException('Usuário não encontrado');
+        }
+       
+        if (person.id !== tokenPayload.userId) {
+            throw new ForbiddenException('Você não tem permissão para editar esse profile.');
+        }
+
+
+        return this.usersRepository.save(person);
+
     }
 }
