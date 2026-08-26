@@ -15,7 +15,7 @@ export class MovieService {
         @InjectRepository(Movie)
         private readonly movieRepository: Repository<Movie>,
         private readonly aiService: AiService
-    ) {}
+    ) { }
 
     async extractMovie() {
         try {
@@ -33,18 +33,22 @@ export class MovieService {
                 if (line.trim()) {
                     const movie = JSON.parse(line);
 
-                    const details = await this.extractDescription(movie.id)
+                    const details = await this.extractDescription(movie.id);
+
+                    const cover = await this.getImages(movie.id);
 
                     const textTransform = JSON.stringify(details)
 
                     const embedding = await this.aiService.generateEmbedding(textTransform);
 
-                     const movieData = {
+                    const movieData = {
+                        moviedb_id: movie.id,
                         original_title: movie.original_title,
                         overview: details.overview,
                         popularity: movie.popularity,
                         release_date: details.release_date,
                         genres: details.genres,
+                        cover,
                         embedding
                     }
 
@@ -79,7 +83,7 @@ export class MovieService {
 
         if (!response.ok) {
             throw new Error(`Erro na busca do filme ${movieId}: ${response.statusText}`);
-        } if (!response.ok) throw new Error('Failed');
+        } 
 
         const data = await response.json()
 
@@ -92,6 +96,34 @@ export class MovieService {
         }
 
         return details;
+    }
+
+    async getImages(movieId: number) {
+        const token = process.env.READ_TOKEN_API;
+
+        const url = `https://api.themoviedb.org/3/movie/${movieId}/images`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                accept: 'application/json',
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro na busca da imagem do filme ${movieId}: ${response.statusText}`);
+        }
+
+
+        const data = await response.json();
+
+        const filePath = data.file_path;
+        const size = 'w500';
+
+        const finalUrl = `https://image.tmdb.org/t/p/${size}/${filePath}`;
+
+        return finalUrl;
     }
 
     async create(createMovieDto: CreateMovieDto) {
@@ -114,5 +146,4 @@ export class MovieService {
 
         return movies;
     }
-
 }
