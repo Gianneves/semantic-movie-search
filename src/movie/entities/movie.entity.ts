@@ -8,10 +8,14 @@ export class Movie {
     id!: string;
 
     @IsNotEmpty()
+    @IsNumber()
+    @Column({ unique: true })
+    moviedb_id!: number
+
+    @IsNotEmpty()
     @IsString()
     @Column()
     original_title!: string;
-
 
     @IsNotEmpty()
     @IsString()
@@ -32,6 +36,10 @@ export class Movie {
     @IsArray()
     @Column('simple-array')
     genres!: string[]
+
+    @IsString()
+    @Column({ nullable: true })
+    cover!: string;
 
     @Column({ type: 'vector', length: 1536, nullable: true })
     embedding?: number[] | null;
