@@ -1,7 +1,8 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import type { ValidationError } from 'class-validator';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
@@ -13,7 +14,14 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
-      transform: false
+      transform: false,
+      exceptionFactory: (validationErrors: ValidationError[]) =>
+        new BadRequestException({
+          errors: validationErrors.map((error) => ({
+            field: error.property,
+            message: Object.values(error.constraints ?? {})[0],
+          })),
+        }),
     })
   );
 
