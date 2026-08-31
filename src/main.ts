@@ -6,6 +6,7 @@ import type { ValidationError } from 'class-validator';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
@@ -40,6 +41,12 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   app.use(cookieParser());
+
+  app.enableCors({
+    origin: 'http://localhost:5173',
+    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
+    credentials: true,
+  })
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
