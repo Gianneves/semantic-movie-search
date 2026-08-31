@@ -34,12 +34,16 @@ export class Movie {
 
     @IsNotEmpty({ each: true })
     @IsArray()
-    @Column('simple-array')
-    genres!: string[]
+    @Column('text', { array: true }) 
+    genres!: string[];
 
     @IsString()
     @Column({ nullable: true })
     cover!: string;
+
+    @IsString()
+    @Column({ nullable: true })
+    backdrops!: string;
 
     @Column({ type: 'vector', length: 1536, nullable: true })
     embedding?: number[] | null;
