@@ -5,7 +5,6 @@ export class CreateMovieDto {
     @IsString()
     original_title!: string;
 
-
     @IsNotEmpty()
     @IsString()
     overview!: string;
@@ -18,10 +17,20 @@ export class CreateMovieDto {
     @IsString()
     release_date!: string;
 
+    @IsNotEmpty()
+    @IsNumber()
+    runtime!: number;
+
     @IsNotEmpty({ each: true })
     @IsArray()
-    genres!: string[]
+    main_cast!: string[];
 
+    @IsString()
+    director!: string;
+
+    @IsNotEmpty({ each: true })
+    @IsArray()
+    genres!: string[];
 
     @IsArray()
     @IsNumber({}, { each: true })

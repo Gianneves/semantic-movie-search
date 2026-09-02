@@ -8,6 +8,7 @@ import { AiModule } from './ai/ai.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
+
 @Module({
   imports: [
     ThrottlerModule.forRoot([
@@ -34,7 +35,7 @@ import { AuthModule } from './auth/auth.module';
     MovieModule,
     AiModule,
     UsersModule,
-    AuthModule],
+    AuthModule,],
   controllers: [],
   providers: [
     {

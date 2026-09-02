@@ -10,7 +10,7 @@ export class MovieController {
     constructor(
         private readonly movieService: MovieService
     ) { }
-    @Get('start')
+    @Post('start')
     async getMovies() {
         return this.movieService.extractMovie();
     }

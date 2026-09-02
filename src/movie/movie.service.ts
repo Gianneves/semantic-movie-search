@@ -47,7 +47,10 @@ export class MovieService {
                         overview: details.overview,
                         popularity: movie.popularity,
                         release_date: details.release_date,
+                        runtime: details.runtime,
                         genres: details.genres,
+                        main_cast: details.mainCast,
+                        director: details.director,
                         cover,
                         backdrops,
                         embedding
@@ -69,7 +72,6 @@ export class MovieService {
 
 
     async extractDescription(movieId: number) {
-
         const token = process.env.READ_TOKEN_API;
 
         const url = `https://api.themoviedb.org/3/movie/${movieId}?language=pt-BR&append_to_response=credits,keywords`;
@@ -86,14 +88,24 @@ export class MovieService {
             throw new Error(`Erro na busca do filme ${movieId}: ${response.statusText}`);
         }
 
-        const data = await response.json()
+        const data = await response.json();
 
-        const genres = data.genres.map((g) => g.name)
+        const mainCast = (data.credits?.cast ?? [])
+            .filter((actor) => actor?.name)
+            .map((actor) => actor.name)
+            .slice(0, 4);
+
+        const genres = data.genres.map((g) => g.name);
+        const directorEntry = data.credits?.crew?.find((person) => person.job === 'Director');
+        const director = directorEntry?.name ?? null;
 
         const details = {
             overview: data.overview,
             genres,
-            release_date: data.release_date
+            release_date: data.release_date,
+            runtime: data.runtime,
+            mainCast,
+            director
         }
 
         return details;
@@ -120,7 +132,7 @@ export class MovieService {
         const data = await response.json();
 
         const coverPath = data.posters[0]?.file_path ?? '';
-        const backdropsPath = data.backdrops[0]?.file_path ?? '';
+        const backdropsPath = data.backdrops[1]?.file_path ?? '';
         const size = 'w500';
 
         const cover = `https://image.tmdb.org/t/p/${size}/${coverPath}`;
@@ -171,7 +183,24 @@ export class MovieService {
     }
 
     async findOne(id: string) {
-        const movie = this.movieRepository.findOneBy({ id });
+        const movie = this.movieRepository.findOne({
+            select: {
+                id: true,
+                original_title: true,
+                moviedb_id: true,
+                cover: true,
+                backdrops: true,
+                overview: true,
+                release_date: true,
+                runtime: true,
+                main_cast: true,
+                director: true,
+                genres: true
+            },
+            where: {
+                id
+            }
+        });
 
         if (!movie) {
             throw new Error('Filme não encontrado')

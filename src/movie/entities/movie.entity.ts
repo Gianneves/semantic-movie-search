@@ -32,9 +32,23 @@ export class Movie {
     @Column()
     release_date!: string;
 
+    @IsNotEmpty()
+    @IsNumber()
+    @Column()
+    runtime!: number;
+
     @IsNotEmpty({ each: true })
     @IsArray()
-    @Column('text', { array: true }) 
+    @Column('text', { array: true })
+    main_cast!: string[];
+
+    @IsString()
+    @Column({ nullable: true })
+    director!: string;
+
+    @IsNotEmpty({ each: true })
+    @IsArray()
+    @Column('text', { array: true })
     genres!: string[];
 
     @IsString()
