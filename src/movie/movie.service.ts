@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as path from 'path'
-import { Repository } from 'typeorm';
+import { ArrayContains, Repository } from 'typeorm';
 import { Movie } from './entities/movie.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -35,7 +35,7 @@ export class MovieService {
 
                     const details = await this.extractDescription(movie.id);
 
-                    const cover = await this.getImages(movie.id);
+                    const { cover, backdrops } = await this.getImages(movie.id);
 
                     const textTransform = JSON.stringify(details)
 
@@ -47,8 +47,12 @@ export class MovieService {
                         overview: details.overview,
                         popularity: movie.popularity,
                         release_date: details.release_date,
+                        runtime: details.runtime,
                         genres: details.genres,
+                        main_cast: details.mainCast,
+                        director: details.director,
                         cover,
+                        backdrops,
                         embedding
                     }
 
@@ -68,7 +72,6 @@ export class MovieService {
 
 
     async extractDescription(movieId: number) {
-
         const token = process.env.READ_TOKEN_API;
 
         const url = `https://api.themoviedb.org/3/movie/${movieId}?language=pt-BR&append_to_response=credits,keywords`;
@@ -83,16 +86,26 @@ export class MovieService {
 
         if (!response.ok) {
             throw new Error(`Erro na busca do filme ${movieId}: ${response.statusText}`);
-        } 
+        }
 
-        const data = await response.json()
+        const data = await response.json();
 
-        const genres = data.genres.map((g) => g.name)
+        const mainCast = (data.credits?.cast ?? [])
+            .filter((actor) => actor?.name)
+            .map((actor) => actor.name)
+            .slice(0, 4);
+
+        const genres = data.genres.map((g) => g.name);
+        const directorEntry = data.credits?.crew?.find((person) => person.job === 'Director');
+        const director = directorEntry?.name ?? null;
 
         const details = {
             overview: data.overview,
             genres,
-            release_date: data.release_date
+            release_date: data.release_date,
+            runtime: data.runtime,
+            mainCast,
+            director
         }
 
         return details;
@@ -118,12 +131,14 @@ export class MovieService {
 
         const data = await response.json();
 
-        const filePath = data.file_path;
+        const coverPath = data.posters[0]?.file_path ?? '';
+        const backdropsPath = data.backdrops[1]?.file_path ?? '';
         const size = 'w500';
 
-        const finalUrl = `https://image.tmdb.org/t/p/${size}/${filePath}`;
+        const cover = `https://image.tmdb.org/t/p/${size}/${coverPath}`;
+        const backdrops = `https://image.tmdb.org/t/p/${size}/${backdropsPath}`;
 
-        return finalUrl;
+        return { cover, backdrops };
     }
 
     async create(createMovieDto: CreateMovieDto) {
@@ -143,6 +158,76 @@ export class MovieService {
 
     async findMovie(findMovieDto: FindMovieDto) {
         const movies = await this.aiService.aiGenerateResponse(findMovieDto.input);
+
+        return movies;
+    }
+
+    async getMostPopular() {
+        const movies = this.movieRepository.find({
+            select: {
+                id: true,
+                original_title: true,
+                moviedb_id: true,
+                cover: true,
+                overview: true,
+                release_date: true,
+                genres: true
+            },
+            order: {
+                popularity: 'DESC'
+            },
+            take: 12,
+        })
+
+        return movies;
+    }
+
+    async findOne(id: string) {
+        const movie = this.movieRepository.findOne({
+            select: {
+                id: true,
+                original_title: true,
+                moviedb_id: true,
+                cover: true,
+                backdrops: true,
+                overview: true,
+                release_date: true,
+                runtime: true,
+                main_cast: true,
+                director: true,
+                genres: true
+            },
+            where: {
+                id
+            }
+        });
+
+        if (!movie) {
+            throw new Error('Filme não encontrado')
+        }
+
+        return movie;
+    }
+
+    async findByCategory(category: string) {
+        const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+        const movies = await this.movieRepository.find({
+            select: {
+                id: true,
+                original_title: true,
+                moviedb_id: true,
+                cover: true,
+                overview: true,
+                release_date: true
+            },
+            where: {
+                genres: ArrayContains([formattedCategory])
+            },
+            order: {
+                popularity: 'DESC'
+            },
+            take: 12
+        });
 
         return movies;
     }

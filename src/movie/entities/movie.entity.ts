@@ -32,14 +32,32 @@ export class Movie {
     @Column()
     release_date!: string;
 
+    @IsNotEmpty()
+    @IsNumber()
+    @Column()
+    runtime!: number;
+
     @IsNotEmpty({ each: true })
     @IsArray()
-    @Column('simple-array')
-    genres!: string[]
+    @Column('text', { array: true })
+    main_cast!: string[];
+
+    @IsString()
+    @Column({ nullable: true })
+    director!: string;
+
+    @IsNotEmpty({ each: true })
+    @IsArray()
+    @Column('text', { array: true })
+    genres!: string[];
 
     @IsString()
     @Column({ nullable: true })
     cover!: string;
+
+    @IsString()
+    @Column({ nullable: true })
+    backdrops!: string;
 
     @Column({ type: 'vector', length: 1536, nullable: true })
     embedding?: number[] | null;
