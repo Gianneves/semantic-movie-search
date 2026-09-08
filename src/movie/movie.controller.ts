@@ -15,7 +15,7 @@ export class MovieController {
         return this.movieService.extractMovie();
     }
 
-    //@UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @ApiOperation({ summary: 'Get movies with input description' })
     @Throttle({ default: { limit: 10, ttl: 60000 } })
     @Post('find-movie')
