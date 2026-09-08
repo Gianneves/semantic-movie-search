@@ -1,5 +1,6 @@
 import { IsArray, IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Review } from "src/review/entities/review.entity";
+import { BeforeInsert, Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { v7 as uuidv7 } from "uuid";
 
 @Entity('movies')
@@ -68,6 +69,9 @@ export class Movie {
     @UpdateDateColumn()
     updatedAt?: Date;
 
+
+    @OneToMany(() => Review, review => review.movie)
+    reviews!: Review[];
 
     @BeforeInsert()
     generateId() {
