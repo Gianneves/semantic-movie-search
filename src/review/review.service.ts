@@ -3,7 +3,6 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TokenPayload } from 'src/auth/utils/token-payload.interface';
 import { Users } from 'src/users/entities/users.entity';
 import { Movie } from 'src/movie/entities/movie.entity';
 
@@ -18,10 +17,10 @@ export class ReviewService {
         private readonly movieRepository: Repository<Movie>
 
     ) {}
-    async create(createReview: CreateReviewDto, user: TokenPayload) {
+    async create(createReview: CreateReviewDto, user: Users) {
 
         const userExist = await this.userRepository.findOneBy({
-            id: user.userId
+            id: user.id
         });
 
         if (!userExist) {
