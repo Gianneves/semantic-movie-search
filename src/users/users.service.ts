@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
-import type { TokenPayload } from 'src/auth/utils/token-payload.interface';
 import * as path from 'path'
 import * as fs from 'fs/promises'
 
@@ -36,7 +35,7 @@ export class UsersService {
         }
     }
 
-    async update(id: string, updateUser: UpdateUserDto, tokenPayload: TokenPayload) {
+    async update(id: string, updateUser: UpdateUserDto, user: Users) {
 
         const personData = {
             name: updateUser.name
@@ -59,23 +58,23 @@ export class UsersService {
             throw new NotFoundException('Usuário não encontrado');
         }
 
-        if (person.id !== tokenPayload.userId) {
+        if (person.id !== user.id) {
             throw new ForbiddenException('Você não tem permissão para editar esse profile.');
         }
 
         return this.usersRepository.save(person);
     }
 
-    async uploadPicture(file: Express.Multer.File, tokenPayload: TokenPayload) {
+    async uploadPicture(file: Express.Multer.File, user: Users) {
         if (file.size < 1024) {
             throw new BadRequestException('Arquivo muito grande');
         }
 
-        const user = await this.usersRepository.findOneBy({
-            id: tokenPayload.userId
+        const userExist = await this.usersRepository.findOneBy({
+            id: user.id
         });
 
-        if (!user) {
+        if (!userExist) {
             throw new Error('Usuário não encontrado.');
         }
 
@@ -84,14 +83,14 @@ export class UsersService {
                 .toLowerCase()
                 .substring(1);
 
-        const fileName = `${tokenPayload.userId}.${fileExtension}`;
+        const fileName = `${user.id}.${fileExtension}`;
         const fileFullPath = path.resolve(process.cwd(), 'avatars', fileName);
 
         await fs.writeFile(fileFullPath, file.buffer);
 
-        user.avatar = fileName;
+        userExist.avatar = fileName;
 
-        await this.usersRepository.save(user);
-        return user;
+        await this.usersRepository.save(userExist);
+        return userExist;
     }
 }

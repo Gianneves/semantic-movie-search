@@ -5,10 +5,12 @@ import { BadRequestException, ClassSerializerInterceptor, ValidationPipe } from 
 import type { ValidationError } from 'class-validator';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
   app.useGlobalPipes(
@@ -41,6 +43,10 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   app.use(cookieParser());
+
+  app.useStaticAssets(join(__dirname, '..', 'avatars'), {
+    prefix: '/avatars', 
+  });
 
   app.enableCors({
     origin: 'http://localhost:5173',

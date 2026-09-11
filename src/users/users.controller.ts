@@ -5,7 +5,6 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/utils/current-user.decorator';
 import { Users } from './entities/users.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
-import type { TokenPayload } from 'src/auth/utils/token-payload.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
@@ -21,8 +20,8 @@ export class UsersController {
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateUser: UpdateUserDto, @CurrentUser() tokenPayload: TokenPayload) {
-        return this.usersService.update(id, updateUser, tokenPayload);
+    update(@Param('id') id: string, @Body() updateUser: UpdateUserDto, @CurrentUser() user: Users) {
+        return this.usersService.update(id, updateUser, user);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -35,7 +34,7 @@ export class UsersController {
                 new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' })
             ]
         })
-    ) file: Express.Multer.File, @CurrentUser() tokenPayload: TokenPayload) {
-        return this.usersService.uploadPicture(file, tokenPayload)
+    ) file: Express.Multer.File, @CurrentUser() user: Users) {
+        return this.usersService.uploadPicture(file, user)
     }
 }
