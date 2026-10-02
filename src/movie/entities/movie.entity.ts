@@ -74,7 +74,7 @@ export class Movie {
     @OneToMany(() => Review, review => review.movie)
     reviews!: Review[];
 
-    @ManyToMany(() => List, list => list.movie)
+    @ManyToMany(() => List, list => list.movies)
     lists!: List[];
 
     @BeforeInsert()

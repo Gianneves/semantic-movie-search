@@ -27,7 +27,7 @@ export class ListService {
             relations: {
                 owner: true,
                 members: true,
-                movie: true,
+                movies: true,
             },
             select: {
                 id: true,
@@ -36,7 +36,7 @@ export class ListService {
                     id: true,
                     name: true,
                 },
-                movie: {
+                movies: {
                     id: true,
                     original_title: true,
                     cover: true,
@@ -73,7 +73,7 @@ export class ListService {
         try {
             await this.listRepository
                 .createQueryBuilder()
-                .relation(List, 'movie')
+                .relation(List, 'movies')
                 .of(listId)   
                 .add(movieId); 
 
@@ -90,11 +90,24 @@ export class ListService {
         }
     }
 
-    async removeMovie(listId: string, movieId: string) {
+    async removeMovie(listId: string, movieId: string, user: Users) {
+          const list = await this.listRepository.findOne({
+              where: { id: listId },
+              relations: ['owner']
+          });
+
+          if (!list) {
+              throw new NotFoundException('Lista não encontrada');
+          }
+
+          if (list.owner.id !== user.id) {
+              throw new ForbiddenException('Você não tem permissão para alterar esta lista');
+          }
+
           try {
             await this.listRepository
                 .createQueryBuilder()
-                .relation(List, 'movie')
+                .relation(List, 'movies')
                 .of(listId)   
                 .remove(movieId); 
 

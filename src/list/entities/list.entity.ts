@@ -31,7 +31,7 @@ export class List {
         joinColumn: { name: 'list_id', referencedColumnName: 'id' },
         inverseJoinColumn: { name: 'movie_id', referencedColumnName: 'id' }
     })
-    movie!: Movie[];
+    movies!: Movie[];
 
     @CreateDateColumn()
     createdAt?: Date;

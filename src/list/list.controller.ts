@@ -4,8 +4,6 @@ import { CurrentUser } from 'src/auth/utils/current-user.decorator';
 import { Users } from 'src/users/entities/users.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ListService } from './list.service';
-import { toHaveStreamOutput } from 'node_modules/@langchain/core/dist/utils/testing/stream';
-import { AddMovieDto } from './dto/add-movie.dto';
 
 @Controller('lists')
 export class ListController {
@@ -25,6 +23,7 @@ export class ListController {
         return this.listService.getLists(user);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Post(':listId/movies/:movieId')
     async addMovie(
         @Param('listId', ParseUUIDPipe) listId: string,
@@ -34,8 +33,9 @@ export class ListController {
         return this.listService.addMovie(listId, movieId, user);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete(':listId/movies/:movieId')
-    async removeMovie(@Param('listId', ParseUUIDPipe) listId: string, @Param('movieId', ParseUUIDPipe) movieId: string) {
-        return this.listService.removeMovie(listId, movieId);
+    async removeMovie(@Param('listId', ParseUUIDPipe) listId: string, @Param('movieId', ParseUUIDPipe) movieId: string, @CurrentUser() user: Users) {
+        return this.listService.removeMovie(listId, movieId, user);
     }
 }
