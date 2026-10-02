@@ -8,6 +8,7 @@ import { AiModule } from './ai/ai.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ReviewModule } from './review/review.module';
+import { ListModule } from './list/list.module';
 
 
 @Module({
@@ -37,7 +38,8 @@ import { ReviewModule } from './review/review.module';
     AiModule,
     UsersModule,
     AuthModule,
-    ReviewModule,],
+    ReviewModule,
+    ListModule,],
   controllers: [],
   providers: [
     {

@@ -1,6 +1,7 @@
 import { IsArray, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { List } from "src/list/entities/list.entity";
 import { Review } from "src/review/entities/review.entity";
-import { BeforeInsert, Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { v7 as uuidv7 } from "uuid";
 
 @Entity('movies')
@@ -72,6 +73,9 @@ export class Movie {
 
     @OneToMany(() => Review, review => review.movie)
     reviews!: Review[];
+
+    @ManyToMany(() => List, list => list.movie)
+    lists!: List[];
 
     @BeforeInsert()
     generateId() {

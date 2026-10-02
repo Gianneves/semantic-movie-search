@@ -1,8 +1,9 @@
 import { IsEmail, IsNotEmpty, IsString, IsStrongPassword } from "class-validator";
-import { BeforeInsert, Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { v7 as uuidv7 } from "uuid";
 import { Exclude } from 'class-transformer';
 import { Review } from "src/review/entities/review.entity";
+import { List } from "src/list/entities/list.entity";
 
 @Entity('users')
 export class Users {
@@ -38,6 +39,12 @@ export class Users {
 
     @OneToMany(() => Review, review => review.user)
     reviews!: Review[];
+
+    @OneToMany(() => List, list => list.owner)
+    ownedLists!: List[];
+
+    @ManyToMany(() => List, list => list.members)
+    sharedLists!: List[];
 
     @BeforeInsert()
     generateId() {
