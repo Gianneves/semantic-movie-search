@@ -10,7 +10,7 @@ export class ListService {
     constructor(
         @InjectRepository(List)
         private readonly listRepository: Repository<List>,
-        
+
     ) { }
 
     async create(createList: CreateListDto, user: Users) {
@@ -58,7 +58,7 @@ export class ListService {
     async addMovie(listId: string, movieId: string, user: Users) {
 
         const list = await this.listRepository.findOne({
-            where: { id: listId},
+            where: { id: listId },
             relations: ['owner']
         });
 
@@ -74,13 +74,13 @@ export class ListService {
             await this.listRepository
                 .createQueryBuilder()
                 .relation(List, 'movies')
-                .of(listId)   
-                .add(movieId); 
+                .of(listId)
+                .add(movieId);
 
             return { message: 'Filme adicionado com sucesso' };
         } catch (error: any) {
-          
-            if (error.code === '23503') { 
+
+            if (error.code === '23503') {
                 throw new NotFoundException('Filme não encontrado');
             }
             if (error.code === '23505') {
@@ -91,29 +91,46 @@ export class ListService {
     }
 
     async removeMovie(listId: string, movieId: string, user: Users) {
-          const list = await this.listRepository.findOne({
-              where: { id: listId },
-              relations: ['owner']
-          });
+        const list = await this.listRepository.findOne({
+            where: { id: listId },
+            relations: ['owner']
+        });
 
-          if (!list) {
-              throw new NotFoundException('Lista não encontrada');
-          }
+        if (!list) {
+            throw new NotFoundException('Lista não encontrada');
+        }
 
-          if (list.owner.id !== user.id) {
-              throw new ForbiddenException('Você não tem permissão para alterar esta lista');
-          }
+        if (list.owner.id !== user.id) {
+            throw new ForbiddenException('Você não tem permissão para alterar esta lista');
+        }
 
-          try {
+        try {
             await this.listRepository
                 .createQueryBuilder()
                 .relation(List, 'movies')
-                .of(listId)   
-                .remove(movieId); 
+                .of(listId)
+                .remove(movieId);
 
             return { message: 'Filme removido com sucesso' };
         } catch (error: any) {
-          throw new InternalServerErrorException('Erro ao remover o filme da lista');
+            throw new InternalServerErrorException('Erro ao remover o filme da lista');
         }
+    }
+
+    async deleteList(id: string, user: Users) {
+        const list = await this.listRepository.findOne({
+            where: { id },
+            relations: ['owner']
+        });
+
+        if (!list) {
+            throw new NotFoundException('Lista não encontrada');
+        }
+
+        if (list.owner.id !== user.id) {
+            throw new ForbiddenException('Você não tem permissão para deletar esta lista');
+        }
+
+        return await this.listRepository.delete(id);
     }
 }
