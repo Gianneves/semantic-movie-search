@@ -38,4 +38,10 @@ export class ListController {
     async removeMovie(@Param('listId', ParseUUIDPipe) listId: string, @Param('movieId', ParseUUIDPipe) movieId: string, @CurrentUser() user: Users) {
         return this.listService.removeMovie(listId, movieId, user);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id')
+    async deleteList(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: Users) {
+        return this.listService.deleteList(id, user);
+    }
 }
