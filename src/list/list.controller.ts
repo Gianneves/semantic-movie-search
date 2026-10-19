@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { CreateListDto } from './dto/create-list.dto';
 import { CurrentUser } from 'src/auth/utils/current-user.decorator';
 import { Users } from 'src/users/entities/users.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ListService } from './list.service';
+import { UpdateListDto } from './dto/update-list.dto';
 
 @Controller('lists')
 export class ListController {
@@ -24,6 +25,12 @@ export class ListController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get(':id')
+    async getOneList(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: Users) {
+        return this.listService.getOneList(id, user);
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Post(':listId/movies/:movieId')
     async addMovie(
         @Param('listId', ParseUUIDPipe) listId: string,
@@ -31,6 +38,12 @@ export class ListController {
         @CurrentUser() user: Users
         ) {
         return this.listService.addMovie(listId, movieId, user);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put(':listId')
+    async editList(@Param('listId', ParseUUIDPipe) listId: string,@Body() updateListDto: UpdateListDto, @CurrentUser() user: Users) {
+        return this.listService.editList(listId, updateListDto, user);
     }
 
     @UseGuards(JwtAuthGuard)
