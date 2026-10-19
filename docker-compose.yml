@@ -11,6 +11,18 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - semantic_search_postgres_data:/var/lib/postgresql/data
+    
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - '${RABBITMQ_PORT:-5672}:5672'
+      - '15672:15672'
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASSOWRD: ${RABBITMQ_PASS:-guest}
 
 
 volumes:

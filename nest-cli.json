@@ -1,8 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/core-api/src",
+  "sourceRoot": "apps/semantic_movie_search/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/semantic_movie_search/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/semantic_movie_search",
+  "projects": {
+    "notification-service": {
+      "type": "application",
+      "root": "apps/notification-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json"
+      }
+    },
+    "semantic_movie_search": {
+      "type": "application",
+      "root": "apps/semantic_movie_search",
+      "entryFile": "main",
+      "sourceRoot": "apps/semantic_movie_search/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/semantic_movie_search/tsconfig.app.json"
+      }
+    }
   }
 }
