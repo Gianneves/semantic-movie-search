@@ -1,0 +1,40 @@
+import { Body, Controller, FileTypeValidator, MaxFileSizeValidator, Param, ParseFilePipe, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UsersService } from './users.service';
+import { JwtAuthGuard } from 'apps/core-api/src/auth/guards/jwt-auth.guard';
+import { CurrentUser } from 'apps/core-api/src/auth/utils/current-user.decorator';
+import { Users } from './entities/users.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+
+@Controller('users')
+export class UsersController {
+    constructor(
+        private readonly usersService: UsersService
+    ) { }
+
+    @Post()
+    create(@Body() createUser: CreateUserDto) {
+        return this.usersService.create(createUser);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch(':id')
+    update(@Param('id') id: string, @Body() updateUser: UpdateUserDto, @CurrentUser() user: Users) {
+        return this.usersService.update(id, updateUser, user);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('file'))
+    uploadPicture(@UploadedFile(
+        new ParseFilePipe({
+            validators: [
+                new MaxFileSizeValidator({ maxSize: 10 * (1024 * 1024) }),
+                new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' })
+            ]
+        })
+    ) file: Express.Multer.File, @CurrentUser() user: Users) {
+        return this.usersService.uploadPicture(file, user)
+    }
+}
