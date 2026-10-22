@@ -55,6 +55,47 @@ User query
 4. The top 5 most semantically similar movies are retrieved
 5. An LLM (`gpt-4o-mini`) generates a human-readable response in **Brazilian Portuguese**, listing titles, genres, release dates, and summaries
 
+## Notifications & RabbitMQ
+
+The friend-invite flow is asynchronous and goes through **RabbitMQ**:
+
+```
+POST /api/v1/friends
+        │
+        ▼
+semantic_movie_search (publisher)
+        │  emit "invite-friend" → notification_queue
+        ▼
+notification-service (consumer)
+        │
+        ▼
+SMTP (Resend / Mailtrap) → e-mail to the invited user
+```
+
+- The API publishes an `invite-friend` event containing the requester and addressee data.
+- `notification-service` consumes `notification_queue` and sends the invitation e-mail via SMTP (Nodemailer).
+- The queue is durable, so messages survive a broker restart.
+
+### Running RabbitMQ
+
+`docker compose up -d` also starts RabbitMQ. The management UI is available at
+`http://localhost:15672` (default credentials: `guest` / `guest`).
+
+Relevant environment variables (see `.env.example`):
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RABBITMQ_URL` | Full AMQP connection string (takes precedence) | — |
+| `RABBITMQ_USER` / `RABBITMQ_PASS` | Broker credentials | `guest` / `guest` |
+| `RABBITMQ_HOST` / `RABBITMQ_PORT` | Broker host and port | `localhost` / `5672` |
+| `NOTIFICATION_QUEUE` | Queue shared by publisher and consumer | `notification_queue` |
+| `EMAIL_HOST` / `EMAIL_PORT` | SMTP server | — |
+| `EMAIL_USER` / `EMAIL_PASSWORD` | SMTP credentials (a Resend API key works as the password) | — |
+| `EMAIL_FROM` | Sender address | — |
+
+> The publisher and the consumer must use the same `NOTIFICATION_QUEUE`, and
+> `notification-service` requires the `EMAIL_*` variables to start.
+
 ## Technologies Used
 
 | Category | Technology |
@@ -67,6 +108,8 @@ User query
 | **Data Source** | [The Movie Database (TMDB)](https://www.themoviedb.org/) |
 | **API Docs** | Swagger (`@nestjs/swagger`) |
 | **Rate Limiting** | `@nestjs/throttler` |
+| **Messaging** | RabbitMQ (`@nestjs/microservices`) |
+| **E-mail** | Nodemailer (SMTP / Resend) |
 | **Containerization** | Docker / docker-compose |
 
 ## Prerequisites
@@ -95,6 +138,8 @@ Edit `.env` and fill in your credentials:
 - `OPENAI_API_KEY` — your OpenAI API key
 - `READ_TOKEN_API` — your TMDB API Read Access Token
 - `THEMOVIEDB_API_KEY` — your TMDB API Key (v3 auth)
+- `RABBITMQ_*` / `NOTIFICATION_QUEUE` — RabbitMQ connection and queue (see [Notifications & RabbitMQ](#notifications--rabbitmq))
+- `EMAIL_*` — SMTP credentials used by `notification-service` to send the invite e-mails
 
 ### 3. Start the database
 
@@ -112,8 +157,20 @@ npm install
 
 ### 5. Run the application
 
+The project is a monorepo with two apps: the REST API (`semantic_movie_search`) and the
+e-mail consumer (`notification-service`), which talks to the API through RabbitMQ.
+
+Start both at once:
+
 ```bash
-npm run start:dev
+npm run start:all
+```
+
+Or run them separately:
+
+```bash
+npm run start:dev            # API
+npm run start:notification   # RabbitMQ consumer (sends the e-mails)
 ```
 
 The API will be available at `http://localhost:3000/api/v1`.
