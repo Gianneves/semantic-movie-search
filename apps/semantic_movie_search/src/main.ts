@@ -1,13 +1,17 @@
+import 'dotenv/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException, ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  ClassSerializerInterceptor,
+  ValidationPipe,
+} from '@nestjs/common';
 import type { ValidationError } from 'class-validator';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
-
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -25,7 +29,7 @@ async function bootstrap() {
             message: Object.values(error.constraints ?? {})[0],
           })),
         }),
-    })
+    }),
   );
 
   if (configService.get('NODE_ENV') !== 'production') {
@@ -45,17 +49,17 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.useStaticAssets(join(__dirname, '..', 'avatars'), {
-    prefix: '/avatars', 
+    prefix: '/avatars',
   });
 
   app.enableCors({
     origin: 'http://localhost:5173',
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     credentials: true,
-  })
+  });
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   await app.listen(configService.getOrThrow('PORT'));
 }
-bootstrap();
+void bootstrap();
