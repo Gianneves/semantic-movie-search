@@ -1,12 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { NotificationServiceService } from './notification-service.service';
+import { EventPattern, Payload } from '@nestjs/microservices';
+import { RabbitDataDto } from './dto/rabbit-data.dto';
 
 @Controller()
 export class NotificationServiceController {
-  constructor(private readonly notificationServiceService: NotificationServiceService) {}
+  private readonly logger = new Logger(NotificationServiceController.name);
+  constructor(
+    private readonly notificationServiceService: NotificationServiceService,
+  ) {}
 
-  @Get()
-  getHello(): string {
-    return this.notificationServiceService.getHello();
+  @EventPattern('invite-friend')
+  async inviteFriendEmail(@Payload() data: RabbitDataDto) {
+    this.logger.log(
+      `📬 Mensagem recebida no RabbitMQ: ${JSON.stringify(data)}`,
+    );
+    await this.notificationServiceService.handleAddFriend(data);
   }
 }
